@@ -2,6 +2,7 @@ const {Router} = require("express")
 const User = require('../models/user')
 const {check,validationResult} = require("express-validator")
 const jwt = require("jsonwebtoken")
+const config = require("config")
 const bcrypt = require('bcryptjs')
 const router = Router()
 
@@ -27,7 +28,7 @@ router.post('/register',
            return res.status(400).json("This email already taken")
         }
 
-        const hashPassword = bcrypt.hash(password,12)
+        const hashPassword = await bcrypt.hash(password,12)
         const user = new User({email:email,password: hashPassword})
         const result = User.create(user)
         res.status(201).json("User created")
@@ -35,7 +36,7 @@ router.post('/register',
         res.status(500).json("something wrong happen")
     }
 })
-router.post('logIn',
+router.post('/logIn',
 [
     check("email","invalid email").normalizeEmail().isEmail(),
     check("password", "min length password os 6 tokens").exists()
@@ -54,13 +55,14 @@ async(req,res)=> {
         if (!user) {
             return res.status(400).json({message: "user not found"})
         }
-
+        
         const isMatch = await bcrypt.compare(password, user.password)
         if (!isMatch) {
-            return res.status(400).json("invalid password")
+            return res.status(400).json({message:"invalid password"})
         }
+        
         const token = jwt.sign({
-            userId: (await user).id
+            userId:  user.id
         },config.get('jwtSecret'),
         {expiresIn:"1h"}
         )
