@@ -7,7 +7,7 @@ const shortId = require("shortid")
 
 const router = Router()
 
-router.post('/generate', auth, async(req,res)=> {
+router.post('/generate',auth, async(req,res)=> {
     try {
       const baseUrl = config.get("baseUrl")
       const {from} = req.body
@@ -16,15 +16,14 @@ router.post('/generate', auth, async(req,res)=> {
       const existing = await Links.findOne({from})
       if (existing) {
           return res.json({link: existing})
-      }
-
-      const to = baseUrl + '/t/' + code
-
-      const link = new Links({
-          code,to,from,owner: req.user.userId
-      })
-
-      await link.save()
+        }
+        
+        const to = baseUrl + '/t/' + code
+        
+        const link = new Links({
+            code,to,from,owner: req.user.userId
+        })
+      const result = await link.save()
 
       res.status(201).json({link})
 
@@ -44,7 +43,6 @@ router.get('/',auth, async(req, res) => {
 
 router.get('/:id', auth, async(req,res)=> {
     try {
-      
         const links = await Links.findById(req.params.id)
         res.json(links)
     } catch (error) {
